@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Catalog Admin • Supabase</title>
+  <!-- Tailwind via CDN for quick styling -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    :root { color-scheme: dark; }
+    body { background: #0b0c0f; }
+    .card { background: #111317; border: 1px solid #1f2430; }
+    label { color: #d8dee9; }
+    input, select, textarea { background: #0b0c0f; border: 1px solid #2a2f3a; color: #e5e7eb; }
+    .btn { background: #1f2937; }
+    .btn:hover { background: #374151; }
+    .link { color: #93c5fd; }
+    .req::after { content: " *"; color: #f87171; }
+    .pill { border: 1px dashed #374151; padding: 0.25rem 0.5rem; border-radius: 999px; }
+    .muted { color: #94a3b8; }
+    .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+    .grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1rem; }
+  </style>
+</head>
+<body class="text-gray-200">
+  <div class="max-w-6xl mx-auto p-4 md:p-8">
+    <header class="mb-6 flex items-center justify-between">
+      <h1 class="text-2xl font-bold">Catalog Admin</h1>
+      <div id="auth-area" class="space-x-2">
+        <input id="email" type="email" placeholder="you@example.com" class="px-3 py-2 rounded border" />
+        <button id="magic" class="btn px-4 py-2 rounded">Send Magic Link</button>
+        <button id="signout" class="btn px-4 py-2 rounded hidden">Sign Out</button>
+      </div>
+    </header>
+
+    <section class="card rounded-2xl p-4 md:p-6 mb-6">
+      <h2 class="text-xl font-semibold mb-2">Setup</h2>
+      <p class="muted mb-3">Add your Supabase project keys and URL locally (not committed). This page uses the <span class="pill">anon</span> public key with Row Level Security; authenticated users can insert/update according to your policies.</p>
+      <div class="grid-2">
+        <div>
+          <label class="req">Supabase URL</label>
+          <input id="supabase-url" class="w-full px-3 py-2 rounded border" placeholder="https://xyzcompany.supabase.co" />
+        </div>
+        <div>
+          <label class="req">Supabase anon key</label>
+          <input id="supabase-key" class="w-full px-3 py-2 rounded border" placeholder="eyJhbGciOi..." />
+        </div>
+      </div>
+      <div class="mt-3">
+        <button id="connect" class="btn px-4 py-2 rounded">Connect</button>
+        <span id="connect-status" class="ml-3 text-sm"></span>
+      </div>
+    </section>
+
+    <nav class="flex gap-2 mb-6">
+      <button data-tab="albums" class="tab btn px-4 py-2 rounded">Albums</button>
+      <button data-tab="tracks" class="tab btn px-4 py-2 rounded">Tracks</button>
+      <button data-tab="credits" class="tab btn px-4 py-2 rounded">Credits</button>
+      <button data-tab="logs" class="tab btn px-4 py-2 rounded">Track Logs</button>
+    </nav>
+
+    <!-- Albums Tab -->
+    <section id="tab-albums" class="tab-panel card rounded-2xl p-4 md:p-6 hidden">
+      <h2 class="text-xl font-semibold mb-4">Create / Update Album</h2>
+      <form id="album-form" class="space-y-4">
+        <div class="grid-2">
+          <div>
+            <label class="req">Album Name</label>
+            <input name="album_name" required class="w-full px-3 py-2 rounded border" />
+          </div>
+          <div>
+            <label>Album Type</label>
+            <select name="album_type" class="w-full px-3 py-2 rounded border">
+              <option value="">—</option>
+              <option>EP</option>
+              <option>LP</option>
+              <option>SP</option>
+              <option>Compilation</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div>
+            <label class="req">Album Artist</label>
+            <select name="album_artist" required class="w-full px-3 py-2 rounded border">
+              <option>Yegge</option>
+              <option>Angershade</option>
+              <option>The Corruptive</option>
+            </select>
+          </div>
+          <div>
+            <label>Catalog Number (1-999)</label>
+            <input type="number" name="catalog_number" min="1" max="999" class="w-full px-3 py-2 rounded border" />
+          </div>
+          <div>
+            <label>UPC</label>
+            <input name="upc" class="w-full px-3 py-2 rounded border" />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label>Distributor URL</label>
+            <input name="distributor_url" class="w-full px-3 py-2 rounded border" />
+          </div>
+          <div>
+            <label>Label URL</label>
+            <input name="label_url" class="w-full px-3 py-2 rounded border" />
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div>
+            <label>Album Status</label>
+            <select name="album_status" class="w-full px-3 py-2 rounded border">
+              <option>In Development</option>
+              <option>Released</option>
+              <option>Removed</option>
+            </select>
+          </div>
+          <div>
+            <label>Release Date</label>
+            <input type="date" name="release_date" class="w-full px-3 py-2 rounded border" />
+          </div>
+          <div>
+            <label>Removal Date</label>
+            <input type="date" name="removal_date" class="w-full px-3 py-2 rounded border" />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label>Front Cover URL</label>
+            <input name="front_cover_url" class="w-full px-3 py-2 rounded border" />
+          </div>
+          <div>
+            <label>Back Cover URL</label>
+            <input name="back_cover_url" class="w-full px-3 py-2 rounded border" />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label>Sleeve URL</label>
+            <input name="sleeve_url" class="w-full px-3 py-2 rounded border" />
+          </div>
+          <div>
+            <label>Sticker URL</label>
+            <input name="sticker_url" class="w-full px-3 py-2 rounded border" />
+          </div>
+        </div>
+
+        <div>
+          <label>Album Commentary</label>
+          <textarea name="album_commentary" rows="4" class="w-full px-3 py-2 rounded border"></textarea>
+        </div>
+
+        <div class="grid-3">
+          <div>
+            <label>Apple Music URL</label>
+            <input name="stream_apple_music_url" class="w-full px-3 py-2 rounded border" />
+          </div>
+          <div>
+            <label>Spotify URL</label>
+            <input name="stream_spotify_url" class="w-full px-3 py-2 rounded border" />
+          </div>
+          <div>
+            <label>YouTube Music URL</label>
+            <input name="stream_youtube_music_url" class="w-full px-3 py-2 rounded border" />
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div>
+            <label>iTunes URL</label>
+            <input name="stream_itunes_url" class="w-full px-3 py-2 rounded border" />
+          </div>
+          <div>
+            <label>Amazon Music URL</label>
+            <input name="stream_amazon_music_url" class="w-full px-3 py-2 rounded border" />
+          </div>
+          <div>
+            <label>Tidal URL</label>
+            <input name="stream_tidal_url" class="w-full px-3 py-2 rounded border" />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label>Bandcamp URL</label>
+            <input name="stream_bandcamp_url" class="w-full px-3 py-2 rounded border" />
+          </div>
+          <div class="grid-2">
+            <div>
+              <label>Physical Media URL</label>
+              <input name="physical_media_url" class="w-full px-3 py-2 rounded border" />
+            </div>
+            <div>
+              <label>Digital Download URL</label>
+              <input name="digital_download_url" class="w-full px-3 py-2 rounded border" />
+            </div>
+          </div>
+        </div>
+
+        <div class="flex gap-2">
+          <button class="btn px-4 py-2 rounded" type="submit">Save Album</button>
+          <button id="album-reset" class="btn px-4 py-2 rounded" type="button">Reset Form</button>
+        </div>
+        <div id="album-msg" class="text-sm mt-2"></div>
+      </form>
+
+      <hr class="my-6 border-slate-700" />
+
+      <h3 class="font-semibold mb-2">Existing Albums</h3>
+      <div class="muted mb-2 text-sm">Select an album to prefill the form for updates.</div>
+      <div id="albums-list" class="space-y-2"></div>
+    </section>
+
+    <!-- Tracks Tab -->
+    <section id="tab-tracks" class="tab-panel card rounded-2xl p-4 md:p-6 hidden">
+      <h2 class="text-xl font-semibold mb-4">Create Track</h2>
+      <form id="track-form" class="space-y-4">
+        <div class="grid-3">
+          <div class="col-span-2">
+            <label class="req">Album</label>
+            <select name="album_id" id="track-album" required class="w-full px-3 py-2 rounded border"></select>
+          </div>
+          <div>
+            <label class="req">Track No.</label>
+            <input type="number" min="1" name="track_no" required class="w-full px-3 py-2 rounded border" />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label class="req">Track Name</label>
+            <input name="track_name" required class="w-full px-3 py-2 rounded border" />
+          </div>
+          <div>
+            <label>Duration (MM:SS)</label>
+            <input name="duration_mmss" placeholder="03:45" class="w-full px-3 py-2 rounded border" />
+          </div>
+        </div>
+
+        <div class="grid-3">
+          <div>
+            <label>ISRC</label>
+            <input name="isrc" class="w-full px-3 py-2 rounded border" />
+          </div>
+          <div>
+            <label>Track Status</label>
+            <select name="track_status" class="w-full px-3 py-2 rounded border">
+              <option>In Development</option>
+              <option>Released</option>
+              <option>Removed</option>
+            </select>
+          </div>
+          <div>
+            <label>Stage (1..10)</label>
+            <input type="number" min="1" max="10" name="stage_of_production" class="w-full px-3 py-2 rounded border" />
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label>Stage Date</label>
+            <input type="date" name="stage_of_production_date" class="w-full px-3 py-2 rounded border" />
+          </div>
+          <div>
+            <label>Visibility (cache)</label>
+            <select name="visibility" class="w-full px-3 py-2 rounded border">
+              <option value="">—</option>
+              <option>In Development</option>
+              <option>Released</option>
+              <option>Removed</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div>
+            <label>Stream Embed URL</label>
+            <input name="stream_embed_url" class="w-full px-3 py-2 rounded border" />
+          </div>
+          <div class="flex items-center gap-2 mt-6">
+            <input id="stream_blocked" name="stream_blocked" type="checkbox" />
+            <label for="stream_blocked">Block Streaming (overlay)</label>
+          </div>
+        </div>
+
+        <div>
+          <label>Purchase Download URL</label>
+          <input name="purchase_download_url" class="w-full px-3 py-2 rounded border" />
+        </div>
+
+        <div class="flex gap-2">
+          <button class="btn px-4 py-2 rounded" type="submit">Save Track</button>
+          <button id="track-reset" class="btn px-4 py-2 rounded" type="button">Reset Form</button>
+        </div>
+        <div id="track-msg" class="text-sm mt-2"></div>
+      </form>
+
+      <hr class="my-6 border-slate-700" />
+
+      <h3 class="font-semibold mb-2">Tracks for Selected Album</h3>
+      <div id="tracks-list" class="space-y-2"></div>
+    </section>
+
+    <!-- Credits Tab -->
+    <section id="tab-credits" class="tab-panel card rounded-2xl p-4 md:p-6 hidden">
+      <h2 class="text-xl font-semibold mb-4">Album & Track Credits</h2>
+
+      <div class="grid md:grid-cols-2 gap-6">
+        <div>
+          <h3 class="font-semibold mb-2">Album Credits</h3>
+          <form id="album-credit-form" class="space-y-3">
+            <label class="req">Album</label>
+            <select name="album_id" id="credit-album" required class="w-full px-3 py-2 rounded border"></select>
+
+            <div class="grid-3">
+              <div>
+                <label class="req">Type</label>
+                <select name="credit_type" class="w-full px-3 py-2 rounded border">
+                  <option value="producer">Producer</option>
+                  <option value="engineer">Engineer</option>
+                  <option value="contributor">Contributor</option>
+                </select>
+              </div>
+              <div>
+                <label class="req">Name</label>
+                <input name="name" required class="w-full px-3 py-2 rounded border" />
+              </div>
+              <div>
+                <label>Role (optional)</label>
+                <input name="role" class="w-full px-3 py-2 rounded border" />
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div>
+                <label>URL</label>
+                <input name="url" class="w-full px-3 py-2 rounded border" />
+              </div>
+              <div>
+                <label>Sort Order</label>
+                <input type="number" name="sort_order" class="w-full px-3 py-2 rounded border" />
+              </div>
+            </div>
+
+            <button class="btn px-4 py-2 rounded" type="submit">Add Credit</button>
+            <div id="album-credit-msg" class="text-sm mt-1"></div>
+          </form>
+        </div>
+
+        <div>
+          <h3 class="font-semibold mb-2">Track Credits</h3>
+          <form id="track-credit-form" class="space-y-3">
+            <label class="req">Track</label>
+            <select name="track_id" id="credit-track" required class="w-full px-3 py-2 rounded border"></select>
+
+            <div class="grid-3">
+              <div>
+                <label class="req">Type</label>
+                <select name="credit_type" class="w-full px-3 py-2 rounded border">
+                  <option value="composer">Composer</option>
+                  <option value="contributor">Contributor</option>
+                </select>
+              </div>
+              <div>
+                <label class="req">Name</label>
+                <input name="name" required class="w-full px-3 py-2 rounded border" />
+              </div>
+              <div>
+                <label>Role (optional)</label>
+                <input name="role" class="w-full px-3 py-2 rounded border" />
+              </div>
+            </div>
+
+            <div class="grid-2">
+              <div>
+                <label>URL</label>
+                <input name="url" class="w-full px-3 py-2 rounded border" />
+              </div>
+              <div>
+                <label>Sort Order</label>
+                <input type="number" name="sort_order" class="w-full px-3 py-2 rounded border" />
+              </div>
+            </div>
+
+            <button class="btn px-4 py-2 rounded" type="submit">Add Credit</button>
+            <div id="track-credit-msg" class="text-sm mt-1"></div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- Logs Tab -->
+    <section id="tab-logs" class="tab-panel card rounded-2xl p-4 md:p-6 hidden">
+      <h2 class="text-xl font-semibold mb-4">Track Logs</h2>
+      <form id="log-form" class="space-y-3">
+        <label class="req">Track</label>
+        <select name="track_id" id="log-track" required class="w-full px-3 py-2 rounded border"></select>
+
+        <div class="grid-2">
+          <div>
+            <label class="req">Title</label>
+            <input name="title" required class="w-full px-3 py-2 rounded border" />
+          </div>
+          <div>
+            <label>Subject</label>
+            <input name="subject" class="w-full px-3 py-2 rounded border" />
+          </div>
+        </div>
+
+        <div>
+          <label>Notes (Markdown/HTML supported)</label>
+          <textarea name="notes" rows="4" class="w-full px-3 py-2 rounded border"></textarea>
+        </div>
+
+        <button class="btn px-4 py-2 rounded" type="submit">Add Log</button>
+        <div id="log-msg" class="text-sm mt-1"></div>
+      </form>
+    </section>
+  </div>
+
+  <!-- Supabase JS CDN -->
+  <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+  <script type="module" src="./admin.js"></script>
+</body>
+</html>
